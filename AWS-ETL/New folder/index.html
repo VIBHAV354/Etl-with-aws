@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Upload to S3</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #4f46e5, #9333ea);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+    text-align: center;
+  }
+
+  h1 {
+    margin-bottom: 10px;
+    font-size: 2rem;
+  }
+
+  p {
+    opacity: 0.8;
+  }
+
+  .upload-box {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 40px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  }
+
+  input[type="file"] {
+    display: block;
+    margin: 20px auto;
+    color: white;
+    font-size: 1rem;
+  }
+
+  button {
+    padding: 12px 24px;
+    background: #10b981;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+
+  button:hover {
+    background: #059669;
+  }
+
+  .status {
+    margin-top: 20px;
+    font-size: 1rem;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<h1>Upload your files to S3</h1>
+<p>Select a PDF or JPG file</p>
+
+<div class="upload-box">
+  <input type="file" id="fileInput" accept=".pdf, .jpg, .jpeg">
+  <button onclick="uploadFile()">Upload</button>
+  <div class="status" id="statusMsg"></div>
+</div>
+
+<script src="https://sdk.amazonaws.com/js/aws-sdk-2.1483.0.min.js"></script>
+<script>
+  AWS.config.update({
+    accessKeyId: "",
+    secretAccessKey: "",
+    region: ""
+  });
+  const s3 = new AWS.S3({ params: { Bucket: "file-upload-source-bucket-123" } });
+
+  async function uploadFile() {
+    const file = document.getElementById("fileInput").files[0];
+    const statusMsg = document.getElementById("statusMsg");
+
+    if (!file) {
+      return alert("Please select a file");
+    }
+
+    if (!["application/pdf", "image/jpeg"].includes(file.type)) {
+      return alert("Only PDF or JPG files are allowed");
+    }
+
+    statusMsg.innerHTML = "Uploading...";
+    const params = {
+      Key: file.name,
+      Body: file,
+      ContentType: file.type
+    };
+
+    try {
+      await s3.putObject(params).promise();
+      statusMsg.innerHTML = "File uploaded successfully!";
+    } catch (err) {
+      console.error(err);
+      statusMsg.innerHTML = "Upload failed!";
+    }
+  }
+</script>
+
+</body>
+</html>
